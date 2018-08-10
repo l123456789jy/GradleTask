@@ -64,19 +64,43 @@ public class Man implements IXposedHookLoadPackage {
                 }
               });
               //================================================
-              final Class<?> aClass = cl.loadClass("com.congcong.dl.application.cc.ShowListActivityQ");
-              XposedHelpers.findAndHookMethod(aClass, "getlogin",
-                  new XC_MethodReplacement() {
+              final Class<?> aClass2 = cl.loadClass("com.congcong.dl.application.cc.ShowListActivityQ");
+              XposedHelpers.findAndHookMethod(aClass2, "getlogin",
+                  new XC_MethodHook() {
                     @Override
-                    protected Object replaceHookedMethod(MethodHookParam methodHookParam)
-                        throws Throwable {
-                      Toast.makeText(((Activity) methodHookParam.thisObject),"hook,成功！",Toast.LENGTH_SHORT).show();
-                      //通过查看源码发现他标记用户的vip标识是vip=1是0不是，所以动态修改他的属性就行了
-                      XposedHelpers.setObjectField(methodHookParam.thisObject,"vip","1");
-                      Log.e("handleLoadPackage", "replaceHookedMethod");
-                      return null;
+                    protected void afterHookedMethod(final MethodHookParam param) throws Throwable {
+                      super.afterHookedMethod(param);
+                      new Thread(){
+                        @Override
+                        public void run() {
+                          super.run();
+                          try {
+                            Thread.sleep(5000);
+                            final Activity thisObject = (Activity) param.thisObject;
+                            thisObject.runOnUiThread(new Runnable() {
+                              @Override
+                              public void run() {
+                                Toast.makeText(thisObject,"hook,成功！",Toast.LENGTH_SHORT).show();
+                                //通过查看源码发现他标记用户的vip标识是vip=1是0不是，所以动态修改他的属性就行了
+                                XposedHelpers.setObjectField(thisObject,"vip","1");
+                                Log.e("handleLoadPackage", "replaceHookedMethod");
+                              }
+                            });
+
+                          } catch (InterruptedException e) {
+                            e.printStackTrace();
+                          }
+                        }
+                      }.start();
+
+                    }
+
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                      super.beforeHookedMethod(param);
                     }
                   });
+
 
             }
           });
