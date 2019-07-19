@@ -20,11 +20,11 @@ android {
 }
 
 dependencies {
-    provided fileTree(include: ['*.jar'], dir: 'libs')
+    compileOnly fileTree(include: ['*.jar'], dir: 'libs')
     //noinspection GradleCompatible
-    compile 'com.android.support:appcompat-v7:24.2.1'
-    compile 'com.squareup.okhttp:okhttp:2.7.5'
-    compile 'com.squareup.okio:okio:1.5.0'
+    implementation 'com.android.support:appcompat-v7:24.2.1'
+    implementation 'com.squareup.okhttp:okhttp:2.7.5'
+    implementation 'com.squareup.okio:okio:1.5.0'
     implementation files('libs/httpclient-4.2.5.jar')
     implementation files('libs/httpclient-cache-4.2.5.jar')
     implementation files('libs/httpcore-4.2.4.jar')
