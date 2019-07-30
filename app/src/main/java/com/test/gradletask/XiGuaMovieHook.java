@@ -13,8 +13,11 @@ import android.widget.Toast;
 import com.test.gradletask.db.DataBaseHelper;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
+import java.util.HashMap;
+import java.util.Set;
 
 /**
  * 项目名称 西瓜电影hook
@@ -45,18 +48,54 @@ public class XiGuaMovieHook implements IXposedHookLoadPackage {
               startManActivity(param.args[0], cl);
 
               XposedHelpers.findAndHookMethod("cn.vcinema.cinema.activity.renew.Renew461Activity",
-                  cl, "onCreate",
-                  Bundle.class, new XC_MethodHook() {
+                  cl, "c", new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                      Object fragment = param.thisObject;
-                      ((Activity) fragment).finish();
+                      final Object fragment = param.thisObject;
+                      new Thread(){
+                        @Override public void run() {
+                          super.run();
+                          try {
+                            Thread.sleep(5000);
+                          } catch (InterruptedException e) {
+                            e.printStackTrace();
+                          }
+                          ((Activity) fragment).runOnUiThread(new Runnable() {
+                            @Override public void run() {
+                              ((Activity) fragment).finish();
+                            }
+                          });
+                        }
+                      }.start();
+
                     }
                     @Override
                     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                       super.beforeHookedMethod(param);
+
                     }
                   });
+
+              XposedHelpers.findAndHookMethod("cn.vcinema.cinema.activity.moviedetail.MovieDetailAndCommentActivity",
+                  cl, "onResume",new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                      Object fragment = param.thisObject;
+                      Toast.makeText(((Activity) fragment),"注入成功",Toast.LENGTH_SHORT).show();
+                      Object pumpkinGlobal = XposedHelpers.callStaticMethod(
+                          cl.loadClass("cn.vcinema.cinema.utils.singleton.PumpkinGlobal"),
+                          "getInstance");
+                      Object mloadOperator =
+                          XposedHelpers.getObjectField(pumpkinGlobal, "mloadOperator");
+                      Log.e("mloadOperator",mloadOperator.toString());
+                    }
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                      super.beforeHookedMethod(param);
+
+                    }
+                  });
+
 
               XposedHelpers.findAndHookMethod("cn.vcinema.cinema.activity.videoplay.HorizontalActivity",
                   cl, "onCreate",Bundle.class, new XC_MethodHook() {
@@ -78,6 +117,7 @@ public class XiGuaMovieHook implements IXposedHookLoadPackage {
                         int vipStatus2 = (int) XposedHelpers.getObjectField(getInstance, "vipStatus");
                         Log.e("user_vip_end_date_desc","修改的VIP状态"+vipStatus2);
 
+
                       /*  //操作数据库==================================
                         Cursor findBySQL = (Cursor) XposedHelpers.callStaticMethod(
                             cl.loadClass("org.litepal.LitePal"),
@@ -92,21 +132,6 @@ public class XiGuaMovieHook implements IXposedHookLoadPackage {
                     }
                   });
 
-             /* try {
-                DataBaseHelper dataBaseHelper = new DataBaseHelper((Context)param.args[0]);
-                SQLiteDatabase readableDatabase = dataBaseHelper.getReadableDatabase();
-                Cursor cursor =  readableDatabase.rawQuery("SELECT * FROM userinfo ", new String[]{});
-                //存在数据才返回true
-                if(cursor.moveToFirst())
-                {
-                  String personid = cursor.getString(cursor.getColumnIndex("user_vip_end_date_desc"));
-                  Log.e("user_vip_end_date_desc", personid);
-                }
-                cursor.close();
-                readableDatabase.close();
-              }catch(Exception e) {
-                Log.e("user_vip_end_date_desc", e.getMessage());
-              }*/
             }
           });
     }
